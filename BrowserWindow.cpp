@@ -6,15 +6,14 @@
  */
 
 #include "BrowserWindow.h"
-#include "WebView.h"
 #include <LibCore/EventLoop.h>
 #include <QAction>
 #include <QStatusBar>
 
 extern String s_serenity_resource_root;
 
-BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
-    : m_event_loop(event_loop)
+BrowserWindow::BrowserWindow(WindowManager& window_manager)
+    : m_window_manager(window_manager)
 {
     m_tabs_container = new QTabWidget;
     m_tabs_container->setElideMode(Qt::TextElideMode::ElideRight);
@@ -27,7 +26,13 @@ BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
     new_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_T));
     menu->addAction(new_tab_action);
 
-    auto* quit_action = new QAction("&Quit");
+    auto* new_window_action = new QAction("New Window");
+    new_window_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
+    menu->addAction(new_window_action);
+
+    menu->addSeparator();
+
+    auto* quit_action = new QAction("Quit");
     quit_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
     menu->addAction(quit_action);
 
@@ -128,6 +133,7 @@ BrowserWindow::BrowserWindow(Core::EventLoop& event_loop)
     });
 
     QObject::connect(new_tab_action, &QAction::triggered, this, &BrowserWindow::new_tab);
+    QObject::connect(new_window_action, &QAction::triggered, this, &BrowserWindow::new_window);
     QObject::connect(quit_action, &QAction::triggered, this, &QMainWindow::close);
     QObject::connect(m_tabs_container, &QTabWidget::currentChanged, [this](int index) {
         setWindowTitle(m_tabs_container->tabText(index));
@@ -166,6 +172,11 @@ void BrowserWindow::new_tab()
     QObject::connect(tab_ptr, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
 }
 
+void BrowserWindow::new_window()
+{
+    m_window_manager.new_window(String::empty());
+}
+
 void BrowserWindow::close_tab(int index)
 {
     auto* tab = m_tabs_container->widget(index);
@@ -173,6 +184,10 @@ void BrowserWindow::close_tab(int index)
     m_tabs.remove_first_matching([&](auto& entry) {
         return entry == tab;
     });
+
+    if (m_tabs.is_empty()) {
+        close();
+    }
 }
 
 int BrowserWindow::tab_index(Tab* tab)
@@ -200,9 +215,5 @@ void BrowserWindow::tab_favicon_changed(int index, QIcon icon)
 void BrowserWindow::closeEvent(QCloseEvent* event)
 {
     QWidget::closeEvent(event);
-
-    // FIXME: Ladybird only supports one window at the moment. When we support
-    //        multiple windows, we'll only want to fire off the quit event when
-    //        all of the browser windows have closed.
-    m_event_loop.quit(0);
+    m_window_manager.window_closed(this);
 }

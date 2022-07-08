@@ -5,6 +5,7 @@
  */
 
 #include "Tab.h"
+#include "WindowManager.h"
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/Forward.h>
 #include <QIcon>
@@ -21,9 +22,9 @@ class WebView;
 class BrowserWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit BrowserWindow(Core::EventLoop&);
+    explicit BrowserWindow(WindowManager&);
 
-    WebView& view() const { return m_current_tab->view(); }
+    [[nodiscard]] WebView& view() const { return m_current_tab->view(); }
 
     int tab_index(Tab*);
 
@@ -33,6 +34,7 @@ public slots:
     void tab_title_changed(int index, QString const&);
     void tab_favicon_changed(int index, QIcon icon);
     void new_tab();
+    void new_window();
     void close_tab(int index);
 
 private:
@@ -42,5 +44,5 @@ private:
     NonnullOwnPtrVector<Tab> m_tabs;
     Tab* m_current_tab { nullptr };
 
-    Core::EventLoop& m_event_loop;
+    WindowManager& m_window_manager;
 };

@@ -39,6 +39,7 @@ set(SOURCES
     WebView.cpp
     History.cpp
     Tab.cpp
+    WindowManager.cpp
 )
 
 add_executable(ladybird ${SOURCES})

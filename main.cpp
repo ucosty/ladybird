@@ -5,13 +5,12 @@
  */
 
 #include "BrowserWindow.h"
-#include "WebView.h"
+#include "WindowManager.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Timer.h>
 #include <LibMain/Main.h>
 #include <QApplication>
-#include <QWidget>
 
 extern void initialize_web_engine();
 
@@ -28,19 +27,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::EventLoop event_loop;
 
     QApplication app(arguments.argc, arguments.argv);
-    BrowserWindow window(event_loop);
-    window.setWindowTitle("Ladybird");
-    window.resize(800, 600);
-    window.show();
+
+    WindowManager window_manager(event_loop);
+    window_manager.new_window(url);
 
     auto qt_event_loop_driver = Core::Timer::create_repeating(50, [&] {
-        app.processEvents();
+        QApplication::processEvents();
     });
     qt_event_loop_driver->start();
-
-    if (!url.is_empty()) {
-        window.view().load(url);
-    }
 
     return event_loop.exec();
 }
