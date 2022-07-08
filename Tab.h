@@ -27,6 +27,8 @@ public:
 
     void debug_request(String const& request, String const& argument);
 
+    [[nodiscard]] QLineEdit& location_edit() const { return *m_location_edit; }
+
 public slots:
     void location_edit_return_pressed();
     void page_title_changed(QString);

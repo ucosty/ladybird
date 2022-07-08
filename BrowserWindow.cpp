@@ -160,6 +160,8 @@ void BrowserWindow::new_tab()
     m_tabs_container->addTab(tab_ptr, "New Tab");
     m_tabs_container->setCurrentWidget(tab_ptr);
 
+    tab_ptr->location_edit().setFocus();
+
     QObject::connect(tab_ptr, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
     QObject::connect(tab_ptr, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
 }
